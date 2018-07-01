@@ -1,3 +1,4 @@
+# CloudFlare DNS record updater v1.0 - James Kerley 2018
 import requests
 import json
 import time
@@ -10,62 +11,88 @@ EMAIL = ""
 WEB_ADDRESS = ""
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
-DEBUG = True
+DEBUG = False
 
-# First, get the DNS records ID
-# GET_DNS_RECORD_ID_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)+"&page=1&per_page=20&order=type&direction=desc&match=all"
+# Function for the closely repeated REQUESTS DEBUG comments
+def debug_comment_r(r):
+    print("\nDEBUG: status code:", r.status_code)
+    print("\nDEBUG: encoding:", r.encoding)
+    print("\nDEBUG: text:", r.text)
+    print("\nDEBUG: json:", r.json())
 
+# Function for custom DEBUG comments
+def debug_comment(e):
+    print("\nDEBUG: "+str(e))
+
+# Function to print out a dict in a pretty way for DEBUG
+def unpack_dict(dic):
+    for key, value in sorted(HEADERS.items(), key=lambda x: x[0]):
+        return "{} : {}".format(key, value)
+
+# Function to get the current external IP
 def get_current_ip():
     CURRENT_IP = requests.get('https://api.ipify.org').text
 
     if DEBUG:
-        print("DEBUG: getting the current ip using ipify.org api")
-        print("\nDEBUG: IP found: "+str(CURRENT_IP))
+        debug_comment("getting the current ip using ipify.org api")
+        debug_comment("IP found: "+str(CURRENT_IP))
         
     return CURRENT_IP
 
-def get_zone_id(WEB_ADDRESS, EMAIL, API_KEY):
+# Function to get the CloudFlare DNS Zone ID
+def get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS):
     GET_ZONE_ID_URL = "https://api.cloudflare.com/client/v4/zones?name="+str(WEB_ADDRESS)+"&status=active&page=1&per_page=20&order=status&direction=desc&match=all"
-    headers = {"X-Auth-Email": str(EMAIL),
-               "X-Auth-Key": str(API_KEY),
-               "Content-Type": "application/json"}
 
-    r = requests.get(GET_ZONE_ID_URL, headers=headers)
+    r = requests.get(GET_ZONE_ID_URL, headers=HEADERS)
 
     if DEBUG:
-        print("DEBUG: getting the zone ID from CloudFlare")
-        print("\nDEBUG: GET request being sent to: "+GET_ZONE_ID_URL)
-        print("\nDEBUG: GET request headers:\n\t'X-Auth-Email': "+str(EMAIL)+"\n\t'X-Auth-Key': "+str(API_KEY)+"\n\t'Content-Type': 'application/json'")
-        print("\nDEBUG: status code:", r.status_code)
-        print("\nDEBUG: encoding:", r.encoding)
-        print("\nDEBUG: text:", r.text)
-        print("\nDEBUG: json:", r.json())
+        debug_comment("getting the zone ID from CloudFlare")
+        debug_comment("GET request being sent to: "+GET_ZONE_ID_URL)
+        debug_comment("GET headers being sent: "+unpack_dict(HEADERS))
+        debug_comment_r(r)
 
     JSON_RESPONSE = r.json()
     if 'result' in JSON_RESPONSE:
         ZONE_ID = str(JSON_RESPONSE['result'][0]['id'])
         if DEBUG:
-            print("\nDEBUG: Zone ID has been found. It is: "+ZONE_ID)
+            debug_comment("Zone ID has been found. It is: "+ZONE_ID)
 
         return ZONE_ID
 
-def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY):
-    CHECK_A_NAME_RECORD_CHANGE_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)+"&content="+str(CURRENT_IP)+"&page=1&per_page=20&order=type&direction=desc&match=all"    
-    headers = {"X-Auth-Email": str(EMAIL),
-               "X-Auth-Key": str(API_KEY),
-               "Content-Type": "application/json"}
+# Function to get the CloudFlare DNS Zone A-Name record ID
+def get_identifier(ZONE_ID, EMAIL, API_KEY, HEADERS):
+    GET_IDENTIFIER_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)
 
-    r = requests.get(CHECK_A_NAME_RECORD_CHANGE_URL, headers=headers)
+    r = requests.get(GET_IDENTIFIER_URL, headers=HEADERS)
+
+    if DEBUG: 
+        debug_comment("checking for a change in IP")
+        debug_comment("GET request being sent to: "+GET_IDENTIFIER_URL)
+        debug_comment("GET headers being sent: "+unpack_dict(HEADERS))
+        debug_comment_r(r)
+
+    JSON_RESPONSE = r.json()
+    if 'result' in JSON_RESPONSE:
+        IDENTIFIER = str(JSON_RESPONSE['result'][0]['id'])
+        if DEBUG:
+            debug_comment("Identifier has been found. It is: "+IDENTIFIER)
+
+        return IDENTIFIER
+    else:
+        print("There is likely a problem with your details. Please double check. If the problem persists, contact me and I'll do my best to help!")
+        sys.exit(0)
+
+# Function to check for a different current external IP, than the one currently stored in the CloudFlare DNS A-Name record
+def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS):
+    CHECK_A_NAME_RECORD_CHANGE_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)+"&content="+str(CURRENT_IP)+"&page=1&per_page=20&order=type&direction=desc&match=all"
+
+    r = requests.get(CHECK_A_NAME_RECORD_CHANGE_URL, headers=HEADERS)
 
     if DEBUG:
-        print("\n\nDEBUG: checking for a change in IP")
-        print("\nDEBUG: GET request being sent to: "+CHECK_A_NAME_RECORD_CHANGE_URL)
-        print("\nDEBUG: GET request headers:\n\t'X-Auth-Email': "+str(EMAIL)+"\n\t'X-Auth-Key': "+str(API_KEY)+"\n\t'Content-Type': 'application/json'")
-        print("\nDEBUG: status code:", r.status_code)
-        print("\nDEBUG: encoding:", r.encoding)
-        print("\nDEBUG: text:", r.text)
-        print("\nDEBUG: json:", r.json())
-        print("\n")
+        debug_comment("checking for a change in IP")
+        debug_comment("GET request being sent to: "+CHECK_A_NAME_RECORD_CHANGE_URL)
+        debug_comment("GET headers being sent: "+unpack_dict(HEADERS))
+        debug_comment_r(r)
 
     JSON_RESPONSE = r.json()
     if 'result_info' in JSON_RESPONSE:
@@ -86,56 +113,21 @@ def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY):
         print("There is likely a problem with your details. Please double check. If the problem persists, contact me and I'll do my best to help")
         sys.exit(0)
 
-def get_identifier(ZONE_ID, EMAIL, API_KEY):
-    GET_IDENTIFIER_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)
-    headers = {"X-Auth-Email": str(EMAIL),
-               "X-Auth-Key": str(API_KEY),
-               "Content-Type": "application/json"}
 
-    r = requests.get(GET_IDENTIFIER_URL, headers=headers)
-
-    if DEBUG: 
-        print("\n\nDEBUG: checking for a change in IP")
-        print("\nDEBUG: GET request being sent to: "+GET_IDENTIFIER_URL)
-        print("\nDEBUG: GET request headers:\n\t'X-Auth-Email': "+str(EMAIL)+"\n\t'X-Auth-Key': "+str(API_KEY)+"\n\t'Content-Type': 'application/json'")
-        print("\nDEBUG: status code:", r.status_code)
-        print("\nDEBUG: encoding:", r.encoding)
-        print("\nDEBUG: text:", r.text)
-        print("\nDEBUG: json:", r.json())
-        print("\n")
-
-    JSON_RESPONSE = r.json()
-    if 'result' in JSON_RESPONSE:
-        IDENTIFIER = str(JSON_RESPONSE['result'][0]['id'])
-        if DEBUG:
-            print("\nDEBUG: Identifier has been found. It is: "+IDENTIFIER)
-
-        return IDENTIFIER
-    else:
-        print("There is likely a problem with your details. Please double check. If the problem persists, contact me and I'll do my best to help!")
-        sys.exit(0)
-
-#ONLY FOR UPDATING
-def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER):
+# Function to update the CloudFlare DNS A-Name record to the new external IP
+def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS):
     UPDATE_A_NAME_RECORD_URL = 'https://api.cloudflare.com/client/v4/zones/'+str(ZONE_ID)+'/dns_records/'+str(IDENTIFIER)
 
-    payload = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': False}
+    PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': False}
 
-    headers = {"X-Auth-Email": str(EMAIL),
-               "X-Auth-Key": str(API_KEY),
-               "Content-Type": "application/json"}
-
-    r = requests.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(payload), headers=headers)
+    r = requests.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(PAYLOAD), headers=HEADERS)
 
     if DEBUG:
-        print("\n\nDEBUG: updating the stored A NAME record at CloudFlare")
-        print("\nDEBUG: GET request being sent to: "+UPDATE_A_NAME_RECORD_URL)
-        print("{\n\t'type': 'A',\n\t'name': '"+WEB_ADDRESS+"',\n\t'content': '"+CURRENT_IP+"',\n\t'ttl': 1,\n\t'proxied': false\n}")        
-        print("\nDEBUG: GET request headers:\n\t'X-Auth-Email': "+str(EMAIL)+"\n\t'X-Auth-Key': "+str(API_KEY)+"\n\t'Content-Type': 'application/json'")
-        print("\nDEBUG: status code:", r.status_code)
-        print("\nDEBUG: encoding:", r.encoding)
-        print("\nDEBUG: text:", r.text)
-        print("\nDEBUG: json:", r.json())
+        debug_comment("updating the stored A NAME record at CloudFlare")
+        debug_comment("GET request being sent to: "+UPDATE_A_NAME_RECORD_URL)
+        debug_comment("GET headers being sent: "+unpack_dict(payload))        
+        debug_comment("GET headers being sent: "+unpack_dict(HEADERS))
+        debug_comment_r(r)
 
     if str(r.status_code) == "200":
         print("Update completed successfully")
@@ -143,24 +135,23 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER):
         print("There has been an error. If the problem persists, contact me and I'll do my best to help!")
         sys.exit(0)
 
-# -- BEGINING OF PROGRAM --
-
+# Vars that need to be run once, or a first time outside of the loop.
 CURRENT_IP = get_current_ip()
-#CURRENT_IP = '10.100.1.10'
-OLD_IP = CURRENT_IP # Move to outside of loop. Only update after run
+HEADERS = {"X-Auth-Email": str(EMAIL),
+           "X-Auth-Key": str(API_KEY),
+           "Content-Type": "application/json"}
 
-ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY)
-IDENTIFIER = get_identifier(ZONE_ID, EMAIL, API_KEY)
+ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS)
+IDENTIFIER = get_identifier(ZONE_ID, EMAIL, API_KEY, HEADERS)
 
+
+# Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
-    UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY)
+    OLD_IP = CURRENT_IP
+    CURRENT_IP = get_current_ip()
+    UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS)
 
     if UPDATE_NEEDED:
-        update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER)
+        update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS)
 
     time.sleep(120)
-
-
-
-
-responses = {200: 'OK',304: 'Not Modified',400: 'Bad Request',401: 'Unauthorized',403: 'Forbidden',405: 'Method Not Allowed',415: 'Unsupported Media Type',429: 'Too many requests'}
