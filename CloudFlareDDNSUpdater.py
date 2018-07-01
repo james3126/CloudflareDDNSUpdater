@@ -63,7 +63,7 @@ def get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS):
         return ZONE_ID
 
 # Function to get the CloudFlare DNS Zone A-Name record ID
-def get_identifier_and_old_ip(ZONE_ID, EMAIL, API_KEY, HEADERS):
+def get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS):
     GET_IDENTIFIER_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)
 
     r = requests.get(GET_IDENTIFIER_URL, headers=HEADERS)
@@ -78,11 +78,18 @@ def get_identifier_and_old_ip(ZONE_ID, EMAIL, API_KEY, HEADERS):
     if 'result' in JSON_RESPONSE:
         IDENTIFIER = str(JSON_RESPONSE['result'][0]['id'])
         OLD_IP = str(JSON_RESPONSE['result'][0]['content'])
+        PROXIED = str(JSON_RESPONSE['result'][0]['proxied'])
         if DEBUG:
             debug_comment("Identifier has been found. It is: "+IDENTIFIER)
             debug_comment("Fetched the old IP. It is: "+OLD_IP)
+            debug_comment("Fetched whether to proxy or not: "+PROXIED)
+
+        if PROXIED == 'true':
+            PROXIED = True
+        else:
+            PROXIED = False
             
-        return IDENTIFIER, OLD_IP
+        return IDENTIFIER, OLD_IP, PROXIED
     else:
         print("There is likely a problem with your details. Please double check. If the problem persists, contact me and I'll do my best to help!")
         sys.exit(0)
@@ -123,7 +130,7 @@ def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, H
 def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS):
     UPDATE_A_NAME_RECORD_URL = 'https://api.cloudflare.com/client/v4/zones/'+str(ZONE_ID)+'/dns_records/'+str(IDENTIFIER)
 
-    PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': False}
+    PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': PROXIED}
 
     r = requests.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(PAYLOAD), headers=HEADERS)
 
@@ -147,7 +154,7 @@ HEADERS = {"X-Auth-Email": str(EMAIL),
            "Content-Type": "application/json"}
 
 ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS)
-IDENTIFIER, OLD_IP = get_identifier_and_old_ip(ZONE_ID, EMAIL, API_KEY, HEADERS)
+IDENTIFIER, OLD_IP, PROXIED = get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS)
 
 # Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
@@ -156,6 +163,6 @@ while True:
     UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS)
 
     if UPDATE_NEEDED:
-        update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS)
+        update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED)
 
-    time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),1))
+    time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),None))
