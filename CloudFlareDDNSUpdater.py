@@ -3,6 +3,7 @@ import requests
 import json
 import time
 import sys
+import os
 
 # Fill out your information here!
 API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
@@ -62,7 +63,7 @@ def get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS):
         return ZONE_ID
 
 # Function to get the CloudFlare DNS Zone A-Name record ID
-def get_identifier(ZONE_ID, EMAIL, API_KEY, HEADERS):
+def get_identifier_and_old_ip(ZONE_ID, EMAIL, API_KEY, HEADERS):
     GET_IDENTIFIER_URL = "https://api.cloudflare.com/client/v4/zones/"+str(ZONE_ID)+"/dns_records?type=A&name="+str(WEB_ADDRESS)
 
     r = requests.get(GET_IDENTIFIER_URL, headers=HEADERS)
@@ -76,10 +77,12 @@ def get_identifier(ZONE_ID, EMAIL, API_KEY, HEADERS):
     JSON_RESPONSE = r.json()
     if 'result' in JSON_RESPONSE:
         IDENTIFIER = str(JSON_RESPONSE['result'][0]['id'])
+        OLD_IP = str(JSON_RESPONSE['result'][0]['content'])
         if DEBUG:
             debug_comment("Identifier has been found. It is: "+IDENTIFIER)
-
-        return IDENTIFIER
+            debug_comment("Fetched the old IP. It is: "+OLD_IP)
+            
+        return IDENTIFIER, OLD_IP
     else:
         print("There is likely a problem with your details. Please double check. If the problem persists, contact me and I'll do my best to help!")
         sys.exit(0)
@@ -144,7 +147,7 @@ HEADERS = {"X-Auth-Email": str(EMAIL),
            "Content-Type": "application/json"}
 
 ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS)
-IDENTIFIER = get_identifier(ZONE_ID, EMAIL, API_KEY, HEADERS)
+IDENTIFIER, OLD_IP = get_identifier_and_old_ip(ZONE_ID, EMAIL, API_KEY, HEADERS)
 
 # Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
@@ -155,4 +158,4 @@ while True:
     if UPDATE_NEEDED:
         update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS)
 
-    time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),None))
+    time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),1))
