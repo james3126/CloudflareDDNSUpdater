@@ -2,7 +2,7 @@
 A simple tool to update your Cloudflare DDNS automatically.
 
 ## HOW TO USE
-1. [Download this script](https://github.com/james3126/CoudflareDDNSUpdater/archive/master.zip)
+1. [Download this script](https://github.com/james3126/CloudflareDDNSUpdater/archive/master.zip)
 2. Open the `CloudflareDDNSUpdater.py` file
 3. Edit the following lines
 ```
