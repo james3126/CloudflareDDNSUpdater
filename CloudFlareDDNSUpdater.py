@@ -10,6 +10,7 @@ API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -
 EMAIL = "" # Your E-Mail registered to your Cloudflare account
 WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
 AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
+PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
 DEBUG = False # True/False -> Default False
@@ -155,6 +156,11 @@ HEADERS = {"X-Auth-Email": str(EMAIL),
 
 ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS)
 IDENTIFIER, OLD_IP, PROXIED = get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS)
+
+if PROXIED_OVERRIDE != None:
+    PROXIED = PROXIED_OVERRIDE
+    if DEBUG:
+        debug_comment("PROXIED has been overridden and set to: "+str(PROXIED))
 
 # Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
