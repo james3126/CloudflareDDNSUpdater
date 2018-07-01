@@ -3,7 +3,6 @@ import requests
 import json
 import time
 import sys
-import os
 
 # Fill out your information here!
 API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
