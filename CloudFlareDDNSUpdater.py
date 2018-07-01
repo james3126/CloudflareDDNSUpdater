@@ -6,12 +6,15 @@ import sys
 import os
 
 # Fill out your information here!
-API_KEY = ""
-EMAIL = ""
-WEB_ADDRESS = ""
+API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
+EMAIL = "" # Your E-Mail registered to your Cloudflare account
+WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
+AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
-DEBUG = False
+DEBUG = False # True/False -> Default False
+
+# ---- You DONT need to touch anything below here for normal operation ----
 
 # Function for the closely repeated REQUESTS DEBUG comments
 def debug_comment_r(r):
@@ -144,7 +147,6 @@ HEADERS = {"X-Auth-Email": str(EMAIL),
 ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS)
 IDENTIFIER = get_identifier(ZONE_ID, EMAIL, API_KEY, HEADERS)
 
-
 # Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
     OLD_IP = CURRENT_IP
@@ -154,4 +156,4 @@ while True:
     if UPDATE_NEEDED:
         update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS)
 
-    time.sleep(120)
+    time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),None))
