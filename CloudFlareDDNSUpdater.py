@@ -6,9 +6,9 @@ import sys
 import os
 
 # Fill out your information here!
-API_KEY = "30872f4f1f353a1fdc904e70406fda33bf41c" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
-EMAIL = "jk3126@hotmail.co.uk" # Your E-Mail registered to your Cloudflare account
-WEB_ADDRESS = "jammyworld.com" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
+API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
+EMAIL = "" # Your E-Mail registered to your Cloudflare account
+WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
 AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
 PROXIED_OVERRIDE = True # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 
