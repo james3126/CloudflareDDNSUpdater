@@ -17,6 +17,11 @@ DEBUG = True # True/False -> Default False
 
 # ---- You DONT need to touch anything below here for normal operation ----
 
+# Class to hold a record
+# Use a list to hold all changeable records
+# Have a config file to hold multiple records
+# Have a gui to edit and change the records easily for GUI users
+
 # Function for the closely repeated REQUESTS DEBUG comments
 def debug_comment_r(r):
     print("\nDEBUG: status code:", r.status_code)
