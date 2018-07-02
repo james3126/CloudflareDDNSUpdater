@@ -10,10 +10,10 @@ API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -
 EMAIL = "" # Your E-Mail registered to your Cloudflare account
 WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
 AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
-PROXIED_OVERRIDE = True # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
+PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
-DEBUG = True # True/False -> Default False
+DEBUG = False # True/False -> Default False
 
 # ---- You DONT need to touch anything below here for normal operation ----
 
