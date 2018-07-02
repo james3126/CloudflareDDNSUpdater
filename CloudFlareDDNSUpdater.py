@@ -6,14 +6,14 @@ import sys
 import os
 
 # Fill out your information here!
-API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
-EMAIL = "" # Your E-Mail registered to your Cloudflare account
-WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
+API_KEY = "30872f4f1f353a1fdc904e70406fda33bf41c" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
+EMAIL = "jk3126@hotmail.co.uk" # Your E-Mail registered to your Cloudflare account
+WEB_ADDRESS = "jammyworld.com" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
 AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
-PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy) to override this.
+PROXIED_OVERRIDE = True # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
-DEBUG = False # True/False -> Default False
+DEBUG = True # True/False -> Default False
 
 # ---- You DONT need to touch anything below here for normal operation ----
 
@@ -128,17 +128,17 @@ def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, H
 
 
 # Function to update the CloudFlare DNS A-Name record to the new external IP
-def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS):
+def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED):
     UPDATE_A_NAME_RECORD_URL = 'https://api.cloudflare.com/client/v4/zones/'+str(ZONE_ID)+'/dns_records/'+str(IDENTIFIER)
 
-    PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': PROXIED}
+    PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': bool(PROXIED)}
 
     r = requests.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(PAYLOAD), headers=HEADERS)
 
     if DEBUG:
         debug_comment("updating the stored A NAME record at CloudFlare")
         debug_comment("GET request being sent to: "+UPDATE_A_NAME_RECORD_URL)
-        debug_comment("GET headers being sent: "+unpack_dict(payload))        
+        debug_comment("GET headers being sent: "+unpack_dict(PAYLOAD))        
         debug_comment("GET headers being sent: "+unpack_dict(HEADERS))
         debug_comment_r(r)
 
