@@ -22,7 +22,7 @@ DEBUG = False
    - Running `pip install -requirements.txt`
    - Running the `EzReqInstaller.py` script by either
       - Double clicking on `EzReqInstaller.py`
-      - Running `python3 EzReqInstaller.py`
+      - Running `python3 EzReqInstaller.py` via command line
 6. Run the script via
    - Double clicking on the file
    - Running `python3 CloudflareDDNSUpdater.py` via command line
