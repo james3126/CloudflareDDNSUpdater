@@ -18,6 +18,11 @@ AUTO_FETCH_TIME_IN_MINUTES = 2
 PROXIED_OVERRIDE = None
 DEBUG = False
 ```
-5. Run the script via
+5. Install requirements for this script by either
+   - Running `pip install -requirements.txt`
+   - Running the `EzReqInstaller.py` script by either
+      - Double clicking on `EzReqInstaller.py`
+      - Running `python3 EzReqInstaller.py`
+6. Run the script via
    - Double clicking on the file
    - Running `python3 CloudflareDDNSUpdater.py` via command line
