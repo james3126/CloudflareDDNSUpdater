@@ -19,7 +19,7 @@ PROXIED_OVERRIDE = None
 DEBUG = False
 ```
 5. Install requirements for this script by either
-   - Running `pip install -requirements.txt`
+   - Running `pip install -r requirements.txt`
    - Running the `EzReqInstaller.py` script by either
       - Double clicking on `EzReqInstaller.py`
       - Running `python3 EzReqInstaller.py` via command line
