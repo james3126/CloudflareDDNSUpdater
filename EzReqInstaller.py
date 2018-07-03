@@ -1,8 +1,6 @@
-# Requirements Installer v1.2ddns - James Kerley 2018
-import sys
-
-def install(package):
-    main(['install', package])
+# Requirements Installer v1.3ddns - James Kerley 2018
+def install(PACKAGE):
+    main(['install', PACKAGE])
 
 def is_new_pip():
     try:
@@ -13,30 +11,44 @@ def is_new_pip():
 
     return bool(int(pip.__version__.split('.')[0]) >= 10)
 
-def is_installed(package, attempt=1):
+def is_installed(PACKAGE, ATTEMPT=1):
     try:
-        globals()[package] = __import__(package)
+        globals()[PACKAGE] = __import__(PACKAGE)
     except ImportError:
-        if attempt == 1:
-            missingPackages.append(package)
-            print("Failed to import %s. Will try to install..." % str(package))
+        if ATTEMPT == 1:
+            MISSING_PACKAGES.append(PACKAGE)
+            print("Failed to import %s. Will try to install..." % str(PACKAGE))
         else:
             print("Unknown error at this time. Please contact me for help! Exiting...")
             exit()
+        return False
     else:
-        print("Imported %s" % str(package))
+        print("Imported %s" % str(PACKAGE))
+        return True
 
-for package in requiredPackages:
-    is_installed(package)
+def get_required():
+    REQUIRED_PACKAGES = []
+    FILE = open("requirements.txt", "r")
+    for LINE in FILE:
+        REQUIRED_PACKAGES.append(LINE)
 
-if len(missingPackages) > 0:
+    return REQUIRED_PACKAGES
+
+REQUIRED_PACKAGES = get_required()
+MISSING_PACKAGES = []
+
+for PACKAGE in REQUIRED_PACKAGES:
+    if not is_installed(PACKAGE):
+        MISSING_PACKAGES.append(PACKAGE)
+        
+if len(MISSING_PACKAGES) > 0:
     print("\n\nAttempting to install missing packages...")
 
     if is_new_pip():
         from pip._internal import main
 
-    for package in missingPackages:
-        print("Preparing for %s installation...\n" % str(packageInstallName))
-        install(packageInstallName)
+    for PACKAGE in MISSING_PACKAGES:
+        print("Preparing for %s installation...\n" % str(PACKAGE_INSTALL_NAME))
+        install(PACKAGE_INSTALL_NAME)
 
-        is_installed(package, 2)
+        is_installed(PACKAGE, 2)
