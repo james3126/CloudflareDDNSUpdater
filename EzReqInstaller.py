@@ -1,4 +1,4 @@
-# Requirements Installer v1.1ddns - James Kerley 2018
+# Requirements Installer v1.2ddns - James Kerley 2018
 import sys
 
 def install(package):
@@ -11,12 +11,7 @@ def is_new_pip():
         print("Failed. Unknown error. Exiting...")
         exit()
 
-    PIP_VERSION = pip.__version__
-
-    if int(PIP_VERSION.split('.')[0]) >= 10:
-        return True
-    else:
-        return False
+    return bool(int(pip.__version__.split('.')[0]) >= 10)
 
 def is_installed(package, attempt=1):
     try:
