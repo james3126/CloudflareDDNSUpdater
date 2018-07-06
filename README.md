@@ -31,9 +31,9 @@ DEBUG = False
 
 
 #### Future updates
-[ ] Config file to reduce copying over details with each update
-[ ] Update notifier at script run
-[ ] Auto-update via git grabbing
-[ ] Allow mulitple A name records
-[ ] Allow multiple types of records
-[ ] GUI for novice or users who want one
+- [ ] Config file to reduce copying over details with each update
+- [ ] Update notifier at script run
+- [ ] Auto-update via git grabbing
+- [ ] Allow mulitple A name records
+- [ ] Allow multiple types of records
+- [ ] GUI for novice or users who want one
