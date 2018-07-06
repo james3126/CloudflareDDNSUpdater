@@ -11,7 +11,7 @@ import os
 API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
 EMAIL = "" # Your E-Mail registered to your Cloudflare account
 WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
-AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
+AUTO_FETCH_TIME_IN_MINUTES = 5 # Default 5 minutes (300 seconds)
 PROXIED_OVERRIDE = True # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 REMOTE_CHECK = "1.1.1.1" # By default, this will ping CloudFlares DNS servers. You can change this to any remote IP, however this is recommended
 
