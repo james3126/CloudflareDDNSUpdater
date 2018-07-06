@@ -35,6 +35,25 @@ def unpack_dict(dic):
     for key, value in sorted(HEADERS.items(), key=lambda x: x[0]):
         return "{} : {}".format(key, value)
 
+# Function to check for all required details entered
+def details_exist(VARS):
+    if DEBUG:
+        debug_comment("checking for all vars set")
+
+    for VAR in VARS:
+        if DEBUG:
+            debug_comment("checking "+str(VAR))
+
+        if VAR in globals():
+            if bool(globals()[VAR]):
+                pass
+            else:
+                print("You haven't set "+str(VAR))
+                sys.exit(0)
+        else:
+            print("You have removed "+str(VAR))
+            sys.exit(0)
+
 # Function to decide if OS is windows or not
 def is_windows():
     if DEBUG:
@@ -181,6 +200,8 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
         sys.exit(0)
 
 # ********* MAIN PROGRAM ***********
+VAR_LIST = ['API_KEY','EMAIL','WEB_ADDRESS','AUTO_FETCH_TIME_IN_MINUTES','REMOTE_CHECK','DEBUG']
+details_exist(VAR_LIST)
 
 if not is_online(REMOTE_CHECK):
     print("Please ensure you are connected to the internet, and have access to cloudflares servers")
