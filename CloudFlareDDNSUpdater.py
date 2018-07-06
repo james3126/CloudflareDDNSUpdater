@@ -21,10 +21,11 @@ DEBUG = False # True/False -> Default False
 
 # Function for the closely repeated REQUESTS DEBUG comments
 def debug_comment_r(r):
-    print("\nDEBUG: status code:", r.status_code)
-    print("\nDEBUG: encoding:", r.encoding)
-    print("\nDEBUG: text:", r.text)
-    print("\nDEBUG: json:", r.json())
+    if DEBUG:
+        print("\nDEBUG: status code:", r.status_code)
+        print("\nDEBUG: encoding:", r.encoding)
+        print("\nDEBUG: text:", r.text)
+        print("\nDEBUG: json:", r.json())
 
 # Function for custom DEBUG comments
 def debug_comment(e):
