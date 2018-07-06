@@ -28,3 +28,12 @@ DEBUG = False
 6. Run the script via
    - Double clicking on the file
    - Running `python3 CloudflareDDNSUpdater.py` via command line
+
+
+#### Future updates
+[ ] Config file to reduce copying over details with each update
+[ ] Update notifier at script run
+[ ] Auto-update via git grabbing
+[ ] Allow mulitple A name records
+[ ] Allow multiple types of records
+[ ] GUI for novice or users who want one
