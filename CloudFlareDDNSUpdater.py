@@ -1,5 +1,7 @@
 # CloudFlare DNS record updater v1.0 - James Kerley 2018
+import subprocess
 import requests
+import platform
 import json
 import time
 import sys
@@ -10,17 +12,12 @@ API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -
 EMAIL = "" # Your E-Mail registered to your Cloudflare account
 WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
 AUTO_FETCH_TIME_IN_MINUTES = 2 # Default 2 minutes (120 seconds)
-PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
+PROXIED_OVERRIDE = True # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
+REMOTE_CHECK = "1.1.1.1" # By default, this will ping CloudFlares DNS servers. You can change this to any remote IP, however this is recommended
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
-DEBUG = False # True/False -> Default False
-
+DEBUG = True # True/False -> Default False
 # ---- You DONT need to touch anything below here for normal operation ----
-
-# Class to hold a record
-# Use a list to hold all changeable records
-# Have a config file to hold multiple records
-# Have a gui to edit and change the records easily for GUI users
 
 # Function for the closely repeated REQUESTS DEBUG comments
 def debug_comment_r(r):
@@ -37,6 +34,36 @@ def debug_comment(e):
 def unpack_dict(dic):
     for key, value in sorted(HEADERS.items(), key=lambda x: x[0]):
         return "{} : {}".format(key, value)
+
+# Function to decide if OS is windows or not
+def is_windows():
+    if DEBUG:
+        debug_comment("finding out OS...")
+        
+    PLATFORM = platform.system().lower()
+    WINDOWS = bool(PLATFORM == "windows")
+
+    if DEBUG:
+        debug_comment("found OS: "+str(PLATFORM))
+        debug_comment("is windows: "+str(WINDOWS))
+
+    return WINDOWS
+
+# Function to ping CloudFlare to first ensure both the local and remote machines are available over the internet
+def is_online(REMOTE_IP):
+    if DEBUG:
+        debug_comment("checking if online")
+    WINDOWS = is_windows()
+    try:
+        output = subprocess.check_output("ping -{} 1 {}".format('n' if WINDOWS else 'c', REMOTE_IP), shell=True)
+    except Exception as error:
+        if DEBUG:
+            debug_comment("online status: "+str(output))
+        return False
+    if DEBUG:
+        if DEBUG:
+            debug_comment("online status: "+str(output))
+    return True
 
 # Function to get the current external IP
 def get_current_ip():
@@ -153,6 +180,12 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
         print("There has been an error. If the problem persists, contact me and I'll do my best to help!")
         sys.exit(0)
 
+# ********* MAIN PROGRAM ***********
+
+if not is_online(REMOTE_CHECK):
+    print("Please ensure you are connected to the internet, and have access to cloudflares servers")
+    sys.exit(0)
+
 # Vars that need to be run once, or a first time outside of the loop.
 CURRENT_IP = get_current_ip()
 HEADERS = {"X-Auth-Email": str(EMAIL),
@@ -169,11 +202,14 @@ if PROXIED_OVERRIDE != None:
 
 # Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
-    OLD_IP = CURRENT_IP
-    CURRENT_IP = get_current_ip()
-    UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS)
+    if is_online(REMOTE_CHECK):
+        OLD_IP = CURRENT_IP
+        CURRENT_IP = get_current_ip()
+        UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS)
 
-    if UPDATE_NEEDED:
-        update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED)
+        if UPDATE_NEEDED:
+            update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED)
 
+    else:
+        print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
     time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),None))
