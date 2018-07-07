@@ -1,10 +1,13 @@
 # CloudFlare DNS record updater v1.9 - James Kerley 2018
+import sys
+if sys.version_info < (3, 0):
+    print("Please run this program with python 3 and above")
+
 import subprocess
 import requests
 import platform
 import json
 import time
-import sys
 import os
 
 # Fill out your information here!
