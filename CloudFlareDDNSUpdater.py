@@ -1,8 +1,8 @@
-# CloudFlare DNS record updater v1.9 - James Kerley 2018
+# CloudFlare DNS record updater v1.11 - James Kerley 2018
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with python 3 and above")
-
+import configparser
 import subprocess
 import requests
 import platform
@@ -10,13 +10,17 @@ import json
 import time
 import os
 
-# Fill out your information here!
-API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
-EMAIL = "" # Your E-Mail registered to your Cloudflare account
-WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
-AUTO_FETCH_TIME_IN_MINUTES = 5 # Default 5 minutes (300 seconds)
+##
+##  Change all inline +str() +int() to ( {} ).format()
+##
+
+# Fill out your information here! - NOT ANY MORE
+#API_KEY = "" # Your Cloudflare API key -> Cloudflare -> My Profile -> API Keys -> Global API Key -> View (KEEP THIS SAFE! DO NOT SHARE)
+#EMAIL = "" # Your E-Mail registered to your Cloudflare account
+#WEB_ADDRESS = "" # Should be your standard domain name E.G, 'jammyworld.com' -> ADVANCED: Can be the name of any A-Name record!
+#AUTO_FETCH_TIME_IN_MINUTES = 5 # Default 5 minutes (300 seconds)
 PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
-REMOTE_CHECK = "1.1.1.1" # By default, this will ping CloudFlares DNS servers. You can change this to any remote IP, however this is recommended
+#REMOTE_CHECK = "1.1.1.1" # By default, this will ping CloudFlares DNS servers. You can change this to any remote IP, however this is recommended
 
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
 DEBUG = False # True/False -> Default False
@@ -195,6 +199,42 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
 
 # ********* MAIN PROGRAM ***********
 VAR_LIST = ['API_KEY','EMAIL','WEB_ADDRESS','AUTO_FETCH_TIME_IN_MINUTES','REMOTE_CHECK','DEBUG']
+config = configparser.ConfigParser()
+
+try:
+    debug_comment("trying to open the config.ini")
+    open('config.ini', 'r')
+except FileNotFoundError:
+    debug_comment("config file was not found. Setting up new file")
+    print("Creating config file...")
+    config['settings'] = {'AUTO_FETCH_TIME_IN_MINUTES' : 5,
+                          'REMOTE_CHECK': '1.1.1.1'}
+                          #'PROXIED_OVERRIDE': None} NEEDS WORK
+    config['account'] = {'API_KEY': '',
+                         'EMAIL': '',
+                         'WEB_ADDRESS': ''}
+
+    debug_comment("writing the file")
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)
+
+    print("Your config file wasn't found, a new one has been created. Find the file and add your info.\nThis should only ever have to be done once!")
+    sys.exit(0)
+else:
+    debug_comment("config file found. Opening, reading, and setting variables")
+    config.read('config.ini')
+    try:
+        AUTO_FETCH_TIME_IN_MINUTES = int(config['settings']['AUTO_FETCH_TIME_IN_MINUTES'])
+        #PROXIED_OVERRIDE = config['settings']['PROXIED_OVERRIDE'] NEEDS WORK. Need to store a bool AND none
+        REMOTE_CHECK = str(config['settings']['REMOTE_CHECK'])
+        
+        WEB_ADDRESS = str(config['account']['WEB_ADDRESS'])
+        API_KEY = str(config['account']['API_KEY'])
+        EMAIL = str(config['account']['EMAIL'])
+    except KeyError as K_E:
+        print("You have damaged your config.ini file, and the {} variable could not be found.\n\nPlease either delete the config.ini file and re-run the program, or manually add it back".format(K_E))
+        sys.exit(0)
+
 details_exist(VAR_LIST)
 
 if not is_online(REMOTE_CHECK):
