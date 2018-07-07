@@ -1,4 +1,4 @@
-# CloudFlare DNS record updater v1.11 - James Kerley 2018
+# CloudFlare DNS record updater v1.12 - James Kerley 2018
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with python 3 and above")
@@ -13,7 +13,6 @@ import os
 # Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
 DEBUG = False # True/False -> Default False
 PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
-
 
 # ---- You DONT need to touch anything below here for normal operation ----
 
@@ -82,7 +81,7 @@ def is_online(REMOTE_IP):
 
 # Function to get the current external IP
 def get_current_ip():
-    CURRENT_IP = requests.get('https://api.ipify.org').text
+    CURRENT_IP = requests.get("https://api.ipify.org").text
 
     debug_comment("getting the current ip using ipify.org api")
     debug_comment("IP found: {}".format(CURRENT_IP))
@@ -170,7 +169,7 @@ def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, H
 
 # Function to update the CloudFlare DNS A-Name record to the new external IP
 def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED):
-    UPDATE_A_NAME_RECORD_URL = 'https://api.cloudflare.com/client/v4/zones/{}/dns_records/{}'.format(ZONE_ID, IDENTIFIER)
+    UPDATE_A_NAME_RECORD_URL = "https://api.cloudflare.com/client/v4/zones/{}/dns_records/{}".format(ZONE_ID, IDENTIFIER)
 
     PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': bool(PROXIED)}
 
