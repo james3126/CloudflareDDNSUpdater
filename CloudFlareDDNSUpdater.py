@@ -1,4 +1,4 @@
-# CloudFlare DNS record updater v1.12 - James Kerley 2018
+# CloudFlare DNS record updater v1.13 - James Kerley 2018
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with python 3 and above")
@@ -6,6 +6,7 @@ if sys.version_info < (3, 0):
 import configparser
 import subprocess
 import requests
+import argparse
 import platform
 import json
 import time
@@ -16,6 +17,7 @@ DEBUG = False # True/False -> Default False
 PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 
 # ---- You DONT need to touch anything below here for normal operation ----
+VERSION = '1.13'
 
 # Function for the closely repeated REQUESTS DEBUG comments
 def debug_comment_r(r):
@@ -189,42 +191,80 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
         sys.exit(0)
 
 # ********* MAIN PROGRAM ***********
-VAR_LIST = ['API_KEY','EMAIL','WEB_ADDRESS','AUTO_FETCH_TIME_IN_MINUTES','REMOTE_CHECK','DEBUG']
+VAR_LIST = ['API_KEY','EMAIL','WEB_ADDRESS','FETCH_FREQUENCY','REMOTE_CHECK','DEBUG']
+REQ_VARS = VAR_LIST[0:3]
+MISS_VAR = []
+
+# Setup argparser
 config = configparser.ConfigParser()
+parser = argparse.ArgumentParser(description='Cloudflare DDNS updater!', conflict_handler='resolve')
+parser.add_argument('--key', '-k', type=str, action="store", dest="API_KEY", help="This is your Cloudflare API key. Can be found at:\nCloudflare -> My Profile -> API Keys -> Global API Key -> View.\n(KEEP THIS SAFE! DO NOT SHARE!)", required=False)
+parser.add_argument('--email', '-e', type=str, action="store", dest="EMAIL", help="This is the email associated to the cloudflare account that your domain is registered too", required=False)
+parser.add_argument('--address', '-a', type=str, action="store", dest="WEB_ADDRESS", help="This is the standard domain name that your record is associated too. EG: jammyworld.com", required=False)
+parser.add_argument('--freq', '-f', type=int, action="store", dest="FETCH_FREQUENCY", default=5, help="This is the time in minutes that the scipt will pause between each check\nDEFAULT: 5", required=False)
+parser.add_argument('--remote', '-r', type=str, action="store", dest="REMOTE_CHECK", default='1.1.1.1', help="This is a remote IP that will be pinged to ensure you're online.\nDEFAULT: 1.1.1.1", required=False)
+parser.add_argument('--proxy', '-p', type=bool, action="store", dest="PROXY_OVERRIDE", help="This will push an override to your current Cloudflare proxied state.\nTrue - Force proxied state on\nFalse - Force proxied state off\nDEFAULT: None", required=False)
+parser.add_argument('--debug', '-d', type=bool, action="store", dest="DEBUG", default=False, help="This will enable or disable a verbose logging output.\nTrue - On\nFalse - Off\nDEFAULT: False", required=False)
 
-try:
-    debug_comment("trying to open the config.ini")
-    open('config.ini', 'r')
-except FileNotFoundError:
-    debug_comment("config file was not found. Setting up new file")
-    print("Creating config file...")
-    config['settings'] = {'AUTO_FETCH_TIME_IN_MINUTES' : 5,
-                          'REMOTE_CHECK': '1.1.1.1'}
-                          #'PROXIED_OVERRIDE': None} NEEDS WORK
-    config['account'] = {'API_KEY': '',
-                         'EMAIL': '',
-                         'WEB_ADDRESS': ''}
+# Get any results and dump to vars
+parsedArgs = parser.parse_args()
+argVars = vars(parsedArgs)
+debug_comment(argVars)
 
-    debug_comment("writing the file")
-    with open('config.ini', 'w') as configfile:
-        config.write(configfile)
-
-    print("Your config file wasn't found, a new one has been created. Find the file and add your info.\nThis should only ever have to be done once!")
+debug_comment("checking for required parsed args!")
+for req in REQ_VARS:
+    debug_comment("checking for parsed {}".format(req))
+    #if req not in argVars:
+    if argVars[req] == None: # Check for each variable having data
+        debug_comment("{} not found in parsed args".format(req)) 
+        MISS_VAR.append(req) #Note down a missing variable
+if (len(MISS_VAR) < len(REQ_VARS)) and (len(MISS_VAR) != 0):
+    debug_comment("Missing vars found {}. But still parsed args".format(MISS_VAR))
+    for miss in MISS_VAR:
+        print("Missing {} args".format(miss))
     sys.exit(0)
+elif len(MISS_VAR) == 0:
+    debug_comment("no missing vars. Choosing parsed args over config.ini")
+    if not DEBUG: # Simple check to see if script has DEBUG = True, and dont allow the default of parser to override this, due to the point in the program this is set.
+        DEBUG = argVars['DEBUG']
+    del argVars['DEBUG']
+    globals().update(argVars)
 else:
-    debug_comment("config file found. Opening, reading, and setting variables")
-    config.read('config.ini')
+    debug_comment("no parsed args found. Trying for ini file")
     try:
-        AUTO_FETCH_TIME_IN_MINUTES = int(config['settings']['AUTO_FETCH_TIME_IN_MINUTES'])
-        #PROXIED_OVERRIDE = config['settings']['PROXIED_OVERRIDE'] NEEDS WORK. Need to store a bool AND none
-        REMOTE_CHECK = str(config['settings']['REMOTE_CHECK'])
-        
-        WEB_ADDRESS = str(config['account']['WEB_ADDRESS'])
-        API_KEY = str(config['account']['API_KEY'])
-        EMAIL = str(config['account']['EMAIL'])
-    except KeyError as K_E:
-        print("You have damaged your config.ini file, and the {} variable could not be found.\n\nPlease either delete the config.ini file and re-run the program, or manually add it back".format(K_E))
+        debug_comment("trying to open the config.ini")
+        open('config.ini', 'r')
+    except FileNotFoundError:
+        debug_comment("config file was not found. Setting up new file")
+        print("Creating config file...")
+        config['settings'] = {'FETCH_FREQUENCY' : 5,
+                              'REMOTE_CHECK': '1.1.1.1'}
+                              #'PROXIED_OVERRIDE': None} NEEDS WORK
+        config['account'] = {'API_KEY': '',
+                             'EMAIL': '',
+                             'WEB_ADDRESS': ''}
+
+        debug_comment("writing the file")
+        with open('config.ini', 'w') as configfile:
+            config.write(configfile)
+
+        print("Your config file wasn't found, a new one has been created. Find the file and add your info.\nThis should only ever have to be done once!")
         sys.exit(0)
+    else:
+        debug_comment("config file found. Opening, reading, and setting variables")
+        config.read('config.ini')
+        try:
+            FETCH_FREQUENCY = int(config['settings']['FETCH_FREQUENCY'])
+            #PROXIED_OVERRIDE = config['settings']['PROXIED_OVERRIDE'] NEEDS WORK. Need to store a bool AND none
+            REMOTE_CHECK = str(config['settings']['REMOTE_CHECK'])
+            
+            WEB_ADDRESS = str(config['account']['WEB_ADDRESS'])
+            API_KEY = str(config['account']['API_KEY'])
+            EMAIL = str(config['account']['EMAIL'])
+        except KeyError as K_E:
+            K_E = str(K_E).lower()
+            print("You have damaged your config.ini file, and the {} variable could not be found.\n\nPlease either delete the config.ini file and re-run the program, or manually add it back".format(K_E))
+            sys.exit(0)
 
 details_exist(VAR_LIST)
 
@@ -257,4 +297,4 @@ while True:
 
     else:
         print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
-    time.sleep(round((AUTO_FETCH_TIME_IN_MINUTES*60),None))
+    time.sleep(round((FETCH_FREQUENCY*60),None))
