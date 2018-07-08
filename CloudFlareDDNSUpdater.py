@@ -74,11 +74,16 @@ def is_online(REMOTE_IP):
     debug_comment("checking if online")
     WINDOWS = is_windows()
     try:
-        OUTPUT = subprocess.check_output("ping -{} 1 {}".format('n' if WINDOWS else 'c', REMOTE_IP), shell=True)
+        #OUTPUT = subprocess.check_output("ping -{} 1 {}".format('n' if WINDOWS else 'c', REMOTE_IP), shell=True)
+        TRY_PING = subprocess.Popen("ping -{} 1 {}".format('n' if WINDOWS else 'cc', REMOTE_IP), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        OUTPUT = TRY_PING.wait()
     except Exception as error:
         debug_comment("online status: {}".format(OUTPUT))
         return False
-
+    if OUTPUT != 0:
+        debug_comment("online status: {}".format(OUTPUT))
+        return False
+    
     debug_comment("online status: {}".format(OUTPUT))
     return True
 
