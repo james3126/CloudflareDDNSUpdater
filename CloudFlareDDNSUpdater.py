@@ -2,6 +2,7 @@
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with python 3 and above")
+    sys.exit(0)
 import configparser
 import subprocess
 import requests
