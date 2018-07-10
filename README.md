@@ -1,7 +1,7 @@
 # CloudflareDDNSUpdater
 A simple tool to update your Cloudflare DDNS automatically.
 
-## YOU MUST HAVE PYTHON3.5 OR GREATER, AND HAVE REQUESTS MODULE (This will be fixed at a later date)
+## YOU MUST HAVE PYTHON3.5 OR GREATER.
 
 #### This repo is currently under LOTS of active development. Please either keep ontop of updates, or star the repo and come back in a few days time once a full release has been made (I expect bugs at the moment, and keep applying fixes constantly. Feel free to inform me of any you find)
 
