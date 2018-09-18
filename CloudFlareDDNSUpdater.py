@@ -1,11 +1,11 @@
-# CloudFlare DNS record updater v1.13 - James Kerley 2018
+# Cloudflare DNS record updater v1.14 - James Kerley 2018
+# Removal of requests dependency
 import sys
 if sys.version_info < (3, 0):
-    print("Please run this program with python 3 and above")
-    sys.exit(0)
+    print("Please run this program with Python 3 or above")
+from reqs import request
 import configparser
 import subprocess
-import requests
 import argparse
 import platform
 import json
@@ -17,17 +17,9 @@ DEBUG = False # True/False -> Default False
 PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
 
 # ---- You DONT need to touch anything below here for normal operation ----
-VERSION = '1.13'
+VERSION = '1.14'
 
-# Function for the closely repeated REQUESTS DEBUG comments
-def debug_comment_r(r):
-    if DEBUG:
-        print("\nDEBUG: status code:", r.status_code)
-        print("\nDEBUG: encoding:", r.encoding)
-        print("\nDEBUG: text:", r.text)
-        print("\nDEBUG: json:", r.json())
-
-# Function for custom DEBUG comments
+# Function for DEBUG comments
 def debug_comment(e):
     if DEBUG:
         print("\nDEBUG: {}".format(e))
@@ -35,6 +27,7 @@ def debug_comment(e):
 # Function to print out a dict in a pretty way for DEBUG
 def unpack_dict(dic):
     for key, value in sorted(HEADERS.items(), key=lambda x: x[0]):
+        
         return "{} : {}".format(key, value)
 
 # Function to check for all required details entered
@@ -82,14 +75,15 @@ def is_online(REMOTE_IP):
         return False
     if OUTPUT != 0:
         debug_comment("online status: {}".format(OUTPUT))
+        
         return False
-    
     debug_comment("online status: {}".format(OUTPUT))
+    
     return True
 
 # Function to get the current external IP
 def get_current_ip():
-    CURRENT_IP = requests.get("https://api.ipify.org").text
+    CURRENT_IP = request.get("https://api.ipify.org")
 
     debug_comment("getting the current ip using ipify.org api")
     debug_comment("IP found: {}".format(CURRENT_IP))
@@ -100,32 +94,28 @@ def get_current_ip():
 def get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS):
     GET_ZONE_ID_URL = "https://api.cloudflare.com/client/v4/zones?name={}&status=active&page=1&per_page=20&order=status&direction=desc&match=all".format(WEB_ADDRESS)
 
-    r = requests.get(GET_ZONE_ID_URL, headers=HEADERS)
+    JSON_RESPONSE = request.get(GET_ZONE_ID_URL, headers=HEADERS, jsonOut=True)
 
     debug_comment("getting the zone ID from CloudFlare")
     debug_comment("GET request being sent to: {}".format(GET_ZONE_ID_URL))
     debug_comment("GET headers being sent: {}".format(unpack_dict(HEADERS)))
-    debug_comment_r(r)
 
-    JSON_RESPONSE = r.json()
     if 'result' in JSON_RESPONSE:
         ZONE_ID = str(JSON_RESPONSE['result'][0]['id'])
         debug_comment("Zone ID has been found. It is: {}".format(ZONE_ID))
-
+        
         return ZONE_ID
 
 # Function to get the CloudFlare DNS Zone A-Name record ID
 def get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS):
     GET_IDENTIFIER_URL = "https://api.cloudflare.com/client/v4/zones/{}/dns_records?type=A&name={}".format(ZONE_ID, WEB_ADDRESS)
 
-    r = requests.get(GET_IDENTIFIER_URL, headers=HEADERS)
+    JSON_RESPONSE = request.get(GET_IDENTIFIER_URL, headers=HEADERS, jsonOut=True)
 
     debug_comment("checking for a change in IP")
     debug_comment("GET request being sent to: {}".format(GET_IDENTIFIER_URL))
     debug_comment("GET headers being sent: {}".format(unpack_dict(HEADERS)))
-    debug_comment_r(r)
 
-    JSON_RESPONSE = r.json()
     if 'result' in JSON_RESPONSE:
         IDENTIFIER = str(JSON_RESPONSE['result'][0]['id'])
         OLD_IP = str(JSON_RESPONSE['result'][0]['content'])
@@ -149,14 +139,12 @@ def get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS):
 def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS):
     CHECK_A_NAME_RECORD_CHANGE_URL = "https://api.cloudflare.com/client/v4/zones/{}/dns_records?type=A&name={}&content={}&page=1&per_page=20&order=type&direction=desc&match=all".format(ZONE_ID, WEB_ADDRESS, CURRENT_IP)
 
-    r = requests.get(CHECK_A_NAME_RECORD_CHANGE_URL, headers=HEADERS)
+    JSON_RESPONSE = request.get(CHECK_A_NAME_RECORD_CHANGE_URL, headers=HEADERS, jsonOut=True)
 
     debug_comment("checking for a change in IP")
     debug_comment("GET request being sent to: {}".format(CHECK_A_NAME_RECORD_CHANGE_URL))
     debug_comment("GET headers being sent: {}".format(unpack_dict(HEADERS)))
-    debug_comment_r(r)
-
-    JSON_RESPONSE = r.json()
+    
     if 'result_info' in JSON_RESPONSE:
         MATCHES_FOUND = str(JSON_RESPONSE['result_info']['count'])
         debug_comment('Matches found: {}'.format(MATCHES_FOUND))
@@ -174,25 +162,25 @@ def check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, H
         print("There is likely a problem with your details. Please double check. If the problem persists, contact me and I'll do my best to help")
         sys.exit(0)
 
-
 # Function to update the CloudFlare DNS A-Name record to the new external IP
 def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED):
     UPDATE_A_NAME_RECORD_URL = "https://api.cloudflare.com/client/v4/zones/{}/dns_records/{}".format(ZONE_ID, IDENTIFIER)
 
     PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': bool(PROXIED)}
 
-    r = requests.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(PAYLOAD), headers=HEADERS)
+    r.status, r.reason = request.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(PAYLOAD), headers=HEADERS)
 
     debug_comment("updating the stored A NAME record at CloudFlare")
     debug_comment("GET request being sent to: {}".format(UPDATE_A_NAME_RECORD_URL))
     debug_comment("GET headers being sent: {}".format(unpack_dict(PAYLOAD)))
     debug_comment("GET headers being sent: {}".format(unpack_dict(HEADERS)))
-    debug_comment_r(r)
 
-    if str(r.status_code) == "200":
+    
+
+    if str(r.status) == "200":
         print("Update completed successfully")
     else:
-        print("There has been an error. If the problem persists, contact me and I'll do my best to help!")
+        print("There has been an error:\n{}".format(r.reason))
         sys.exit(0)
 
 # ********* MAIN PROGRAM ***********
@@ -303,3 +291,4 @@ while True:
     else:
         print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
     time.sleep(round((FETCH_FREQUENCY*60),None))
+
