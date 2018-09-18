@@ -3,7 +3,7 @@ import urllib.request
 import json
 
 class request:
-    def get_request(url, headers=None, jsonOut=False):
+    def get(url, headers=None, jsonOut=False):
         if headers != None:
             req = urllib.request.Request(url, headers=headers)
         else:
@@ -15,3 +15,12 @@ class request:
             return json_obj
         else:
             return reponse
+
+    def put(url, data, headers=None):
+        if headers != None:
+            req = urllib.request.Request(url, data=data, headers=headers, method='PUT')
+            with urllib.request.urlopen(req) as f:
+                pass
+
+            return f.status, f.reason
+            
