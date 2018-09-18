@@ -8,11 +8,11 @@ A simple tool to update your Cloudflare DDNS automatically.
 ## HOW TO USE
 1. [Download this script](https://github.com/james3126/CloudflareDDNSUpdater/archive/master.zip)
 
-2. Install requirements for this script by either (Soon To Be Legacy)
-   - Running `pip install -r requirements.txt`
-   - Running the `EzReqInstaller.py` script by either
-      - Double clicking on `EzReqInstaller.py`
-      - Running `python3 EzReqInstaller.py` via command line
+2. LEGACY: Install requirements for this script by either
+   LEGACY: - Running `pip install -r requirements.txt`
+   LEGACY: - Running the `EzReqInstaller.py` script by either
+   LEGACY:    - Double clicking on `EzReqInstaller.py`
+   LEGACY:    - Running `python3 EzReqInstaller.py` via command line
       
 3. Run the script via
    - Double clicking on the file
