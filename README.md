@@ -1,18 +1,18 @@
 # CloudflareDDNSUpdater
 A simple tool to update your Cloudflare DDNS automatically.
 
-## YOU MUST HAVE PYTHON3.5 OR GREATER.
+## YOU MUST HAVE PYTHON3.x OR GREATER.
 
 #### This repo is currently under LOTS of active development. Please either keep ontop of updates, or star the repo and come back in a few days time once a full release has been made (I expect bugs at the moment, and keep applying fixes constantly. Feel free to inform me of any you find)
 
 ## HOW TO USE
 1. [Download this script](https://github.com/james3126/CloudflareDDNSUpdater/archive/master.zip)
 
-2. LEGACY: Install requirements for this script by either
-   LEGACY: - Running `pip install -r requirements.txt`
-   LEGACY: - Running the `EzReqInstaller.py` script by either
-   LEGACY:    - Double clicking on `EzReqInstaller.py`
-   LEGACY:    - Running `python3 EzReqInstaller.py` via command line
+2. !!LEGACY!! Install requirements for this script by either
+   - Running `pip install -r requirements.txt`
+   - Running the `EzReqInstaller.py` script by either
+   - Double clicking on `EzReqInstaller.py`
+   - Running `python3 EzReqInstaller.py` via command line
       
 3. Run the script via
    - Double clicking on the file
