@@ -14,7 +14,7 @@ class request:
             json_obj = json.loads(response)
             return json_obj
         else:
-            return reponse
+            return response
 
     def put(url, data, headers=None):
         if headers != None:
@@ -23,4 +23,3 @@ class request:
                 pass
 
             return f.status, f.reason
-            
