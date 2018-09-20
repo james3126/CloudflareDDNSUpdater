@@ -168,7 +168,7 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
 
     PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': bool(PROXIED)}
 
-    r.status, r.reason = request.put(UPDATE_A_NAME_RECORD_URL, data=json.dumps(PAYLOAD), headers=HEADERS)
+    r.status, r.reason = request.put(UPDATE_A_NAME_RECORD_URL, data=PAYLOAD, headers=HEADERS)
 
     debug_comment("updating the stored A NAME record at CloudFlare")
     debug_comment("GET request being sent to: {}".format(UPDATE_A_NAME_RECORD_URL))
@@ -286,9 +286,8 @@ while True:
         UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS)
 
         if UPDATE_NEEDED:
-            update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED)
+            update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED) #HERE
 
     else:
         print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
     time.sleep(round((FETCH_FREQUENCY*60),None))
-
