@@ -18,7 +18,6 @@ class request:
 
     def put(url, data, headers=None):
         if headers != None:
-            print("OH FUCK {}".format(data))
             formatted_data = urllib.parse.quote(data).encode("utf-8")
             req = urllib.request.Request(url, data=formatted_data, headers=headers, method='PUT')
             with urllib.request.urlopen(req) as f:
