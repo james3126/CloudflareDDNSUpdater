@@ -1,5 +1,5 @@
 # Cloudflare DNS record updater v1.14 - James Kerley 2018
-# Removal of requests dependency
+# Removal of requests dependency (and useless JSON module)
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with Python 3 or above")
@@ -8,7 +8,6 @@ import configparser
 import subprocess
 import argparse
 import platform
-import json
 import time
 import os
 
