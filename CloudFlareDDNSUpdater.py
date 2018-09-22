@@ -1,5 +1,5 @@
-# Cloudflare DNS record updater v1.14 - James Kerley 2018
-# Removal of requests dependency (and useless JSON module)
+# Cloudflare DNS record updater v1.15 - James Kerley 2018
+# Addition of single run for cron job-ability.
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with Python 3 or above")
@@ -11,12 +11,12 @@ import platform
 import time
 import os
 
-# Only enable if you are debugging. This is verbose and dumps lots of information that you dont normally need
-DEBUG = False # True/False -> Default False
-PROXIED_OVERRIDE = None # By default, your current record proxy configuration will be kept. Change this to True (Force enable proxy) or False (Force disable proxy)
+DEBUG = False # Verbose debug output, dumping lots of useless information for normal operation. | Default: False
+PROXIED_OVERRIDE = None # This will allow you to override your Cloudflare record proxy configuration. Change this to True (Force enable proxy) or False (Force disable proxy) or None (Keep current setting) | Default: None
+SINGLE_RUN = False # This will enable you to run more easily as a cron job. | Default: False
 
 # ---- You DONT need to touch anything below here for normal operation ----
-VERSION = '1.14'
+VERSION = '1.15'
 
 # Function for DEBUG comments
 def debug_comment(e):
@@ -197,6 +197,7 @@ parser.add_argument('--freq', '-f', type=int, action="store", dest="FETCH_FREQUE
 parser.add_argument('--remote', '-r', type=str, action="store", dest="REMOTE_CHECK", default='1.1.1.1', help="This is a remote IP that will be pinged to ensure you're online.\nDEFAULT: 1.1.1.1", required=False)
 parser.add_argument('--proxy', '-p', type=bool, action="store", dest="PROXY_OVERRIDE", help="This will push an override to your current Cloudflare proxied state.\nTrue - Force proxied state on\nFalse - Force proxied state off\nDEFAULT: None", required=False)
 parser.add_argument('--debug', '-d', type=bool, action="store", dest="DEBUG", default=False, help="This will enable or disable a verbose logging output.\nTrue - On\nFalse - Off\nDEFAULT: False", required=False)
+parser.add_argument('--single', '-s', type=bool, action="store", dest="SINGLE_RUN", default=True, help="This will only run the program once, perfect for cron jobs with command line useage.\nDEFAULT: True", required=False)
 
 # Get any results and dump to vars
 parsedArgs = parser.parse_args()
@@ -220,6 +221,7 @@ elif len(MISS_VAR) == 0:
     if not DEBUG: # Simple check to see if script has DEBUG = True, and dont allow the default of parser to override this, due to the point in the program this is set.
         DEBUG = argVars['DEBUG']
     del argVars['DEBUG']
+    
     globals().update(argVars)
 else:
     debug_comment("no parsed args found. Trying for ini file")
@@ -259,6 +261,7 @@ else:
             sys.exit(0)
 
 details_exist(VAR_LIST)
+debug_comment("Single run: {}".format(SINGLE_RUN))
 
 if not is_online(REMOTE_CHECK):
     print("Please ensure you are connected to the internet, and have access to cloudflares servers")
@@ -289,4 +292,8 @@ while True:
 
     else:
         print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
-    time.sleep(round((FETCH_FREQUENCY*60),None))
+    if not SINGLE_RUN:
+        time.sleep(round((FETCH_FREQUENCY*60),None))
+    else:
+        break
+sys.exit(0)
