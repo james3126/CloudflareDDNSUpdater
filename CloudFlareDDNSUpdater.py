@@ -167,7 +167,7 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
 
     PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': bool(PROXIED)}
 
-    r = request.put(UPDATE_A_NAME_RECORD_URL, data=PAYLOAD, headers=HEADERS)
+    r_status, r_reason = request.put(UPDATE_A_NAME_RECORD_URL, data=PAYLOAD, headers=HEADERS)
 
     debug_comment("updating the stored A NAME record at CloudFlare")
     debug_comment("GET request being sent to: {}".format(UPDATE_A_NAME_RECORD_URL))
@@ -176,11 +176,10 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
 
     
 
-    #if str(r.status) == "200":
-    if r == True:
+    if str(r_status) == "200":
         print("Update completed successfully")
     else:
-        print("There has been an error:\n{}".format(r.reason))
+        print("Record update failed with following reason:\n{}".format(r_reason))
         sys.exit(0)
 
 # ********* MAIN PROGRAM ***********
