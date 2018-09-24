@@ -1,8 +1,5 @@
 # HTTP GET/PUT module without 'requests' - James Kerley 2018
 import urllib.request
-import urllib3
-from urllib.parse import urlencode
-urllib3.disable_warnings()
 import json
 
 class request:
@@ -21,10 +18,10 @@ class request:
 
     def put(url, data, headers=None):
         if headers != None:
-            http = urllib3.PoolManager()
-            encoded_body = json.dumps(data)
+            params = json.dumps(data).encode("utf-8")
+            req = urllib.request.Request(url, data=params, headers=headers, method="PUT")
 
-            r=http.request("PUT",url,headers=headers,body=encoded_body)
-            x=json.loads(r.data.decode("utf-8"))
+            response = urllib.request.urlopen(req)
+            #r = response.read().decode("utf-8")
 
-            return x['success']
+            return response.status, response.reason
