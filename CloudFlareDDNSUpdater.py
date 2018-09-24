@@ -1,5 +1,5 @@
-# Cloudflare DNS record updater v1.15 - James Kerley 2018
-# Addition of single run for cron job-ability.
+# Cloudflare DNS record updater v1.16 - James Kerley 2018
+# Huge amount of bug fixes
 import sys
 if sys.version_info < (3, 0):
     print("Please run this program with Python 3 or above")
@@ -16,7 +16,7 @@ PROXIED_OVERRIDE = None # This will allow you to override your Cloudflare record
 SINGLE_RUN = False # This will enable you to run more easily as a cron job. | Default: False
 
 # ---- You DONT need to touch anything below here for normal operation ----
-VERSION = '1.15'
+VERSION = '1.16'
 
 # Function for DEBUG comments
 def debug_comment(e):
@@ -124,7 +124,7 @@ def get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS):
         debug_comment("Fetched the old IP. It is: {}".format(OLD_IP))
         debug_comment("Fetched whether to proxy or not: {}".format(PROXIED))
 
-        if PROXIED == 'true':
+        if PROXIED == 'true' or PROXIED == 'True':
             PROXIED = True
         else:
             PROXIED = False
@@ -167,7 +167,7 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
 
     PAYLOAD = {'type': 'A','name': WEB_ADDRESS,'content': CURRENT_IP,'ttl': 1,'proxied': bool(PROXIED)}
 
-    r.status, r.reason = request.put(UPDATE_A_NAME_RECORD_URL, data=PAYLOAD, headers=HEADERS)
+    r = request.put(UPDATE_A_NAME_RECORD_URL, data=PAYLOAD, headers=HEADERS)
 
     debug_comment("updating the stored A NAME record at CloudFlare")
     debug_comment("GET request being sent to: {}".format(UPDATE_A_NAME_RECORD_URL))
@@ -176,7 +176,8 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
 
     
 
-    if str(r.status) == "200":
+    #if str(r.status) == "200":
+    if r == True:
         print("Update completed successfully")
     else:
         print("There has been an error:\n{}".format(r.reason))
