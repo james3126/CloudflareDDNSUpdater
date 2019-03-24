@@ -4,6 +4,9 @@ from reqs import request
 import subprocess
 import json
 import sys
+#from debugging import debugComment
+#from debugging import unpackDict
+from debugging import *
 
 class CDNSU:
     """Main CF DNS Updater class!"""
@@ -95,11 +98,12 @@ class CDNSU:
         """Get the zone ID from CloudFlare"""
 
         url = 'https://api.cloudflare.com/client/v4/zones?name={}&status=active&page=1&per_page=20&order=status&direction=desc&match=all'.format(self.webAddress)
+
         jsonResponse = request.get(url, headers=self.headers, jsonOut=True)
 
-        # debugComment('getting the zone ID from CloudFlare')
-        # debugComment('GET request being sent to: {}'.format(url))
-        # debugComment('GET headers being sent: {}'.format(unpackDict(self.headers)))
+        debugComment('getting the zone ID from CloudFlare')
+        debugComment('GET request being sent to: {}'.format(url))
+        debugComment('GET headers being sent: {}'.format(unpackDict(self.headers)))
 
         if 'result' in jsonResponse:
             self.zoneId = str(jsonResponse['result'][0]['id'])
