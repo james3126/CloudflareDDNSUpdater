@@ -67,7 +67,7 @@ def is_online(REMOTE_IP):
     WINDOWS = is_windows()
     try:
         #OUTPUT = subprocess.check_output("ping -{} 1 {}".format('n' if WINDOWS else 'c', REMOTE_IP), shell=True)
-        TRY_PING = subprocess.Popen("ping -{} 1 {}".format('n' if WINDOWS else 'cc', REMOTE_IP), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        TRY_PING = subprocess.Popen("ping -{} 1 {}".format('n' if WINDOWS else 'c', REMOTE_IP), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         OUTPUT = TRY_PING.wait()
     except Exception as error:
         debug_comment("online status: {}".format(OUTPUT))
@@ -293,7 +293,8 @@ while True:
     else:
         print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
     if not SINGLE_RUN:
-        time.sleep(round((FETCH_FREQUENCY*60),None))
+        #time.sleep(round((FETCH_FREQUENCY*60),None))
+        time.sleep(int(FETCH_FREQUENCY*60))
     else:
         break
 sys.exit(0)
