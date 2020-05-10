@@ -183,7 +183,7 @@ def update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, 
         sys.exit(0)
 
 # ********* MAIN PROGRAM ***********
-VAR_LIST = ['API_KEY','EMAIL','WEB_ADDRESS','FETCH_FREQUENCY','REMOTE_CHECK','DEBUG']
+VAR_LIST = ['API_KEY','EMAIL','WEB_ADDRESS','FETCH_FREQUENCY','REMOTE_CHECK','DEBUG', 'ZONE_ADDRESS']
 REQ_VARS = VAR_LIST[0:3]
 MISS_VAR = []
 
@@ -236,7 +236,8 @@ else:
                               #'PROXIED_OVERRIDE': None} NEEDS WORK
         config['account'] = {'API_KEY': '',
                              'EMAIL': '',
-                             'WEB_ADDRESS': ''}
+                             'WEB_ADDRESS': '',
+                             'ZONE_ADDRESS': ''}
 
         debug_comment("writing the file")
         with open('config.ini', 'w') as configfile:
@@ -253,6 +254,7 @@ else:
             REMOTE_CHECK = str(config['settings']['REMOTE_CHECK'])
             
             WEB_ADDRESS = str(config['account']['WEB_ADDRESS'])
+            ZONE_ADDRESS = str(config['account']['ZONE_ADDRESS'])
             API_KEY = str(config['account']['API_KEY'])
             EMAIL = str(config['account']['EMAIL'])
         except KeyError as K_E:
@@ -273,7 +275,7 @@ HEADERS = {"X-Auth-Email": str(EMAIL),
            "X-Auth-Key": str(API_KEY),
            "Content-Type": "application/json"}
 
-ZONE_ID = get_zone_id(WEB_ADDRESS, EMAIL, API_KEY, HEADERS)
+ZONE_ID = get_zone_id(ZONE_ADDRESS, EMAIL, API_KEY, HEADERS)
 IDENTIFIER, OLD_IP, PROXIED = get_identifier_oldip_proxiedstate(ZONE_ID, EMAIL, API_KEY, HEADERS)
 
 if PROXIED_OVERRIDE != None:
@@ -283,12 +285,12 @@ if PROXIED_OVERRIDE != None:
 # Main loop to run, checking for updated and, if needed, updating the CloudFlare DNS A-Name record. Then sleeping for 2 minutes.
 while True:
     if is_online(REMOTE_CHECK):
-        OLD_IP = CURRENT_IP
         CURRENT_IP = get_current_ip()
         UPDATE_NEEDED = check_for_change(ZONE_ID, WEB_ADDRESS, CURRENT_IP, OLD_IP, EMAIL, API_KEY, HEADERS)
 
         if UPDATE_NEEDED:
             update_record(ZONE_ID, WEB_ADDRESS, CURRENT_IP, EMAIL, API_KEY, IDENTIFIER, HEADERS, PROXIED) #HERE
+            OLD_IP = CURRENT_IP
 
     else:
         print("Not online currently. Awaiting for connection to cloudflare servers to resume...")
